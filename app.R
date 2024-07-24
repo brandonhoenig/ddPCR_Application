@@ -104,12 +104,17 @@ ui <-
     # plots out the ggplot of the 2 channel ddpcr assay
     fluidRow(
       column(8, 
-             plotOutput("plot")), 
+             plotOutput("plotout"),
+             downloadButton("downloadPlot", 
+             "Download Plot")), 
       # plots out the summary table for number of copies. 
       column(4, 
-             tableOutput("counts"))
+             tableOutput("counts"),
+             downloadButton("downloadCounts", 
+                            "Download Table")),
     )
     )
+    
 
 # Define server logic
 server <- 
@@ -210,38 +215,51 @@ server <-
     })
     
     # renders the ggplot for showing ddPCR droplets and their droplet statuses. 
-    output$plot <- renderPlot({
-      req(input$upload)
+    myplot <- reactive({
       
       ggplot() +
-      geom_point(data = dat(), 
-                 aes(x = x_value, 
-                        y = y_value,
-                     colour = droplet_status)) +
-      geom_vline(data = dat(), 
-                 aes(xintercept = x_threshold)) +
-      geom_hline(data = dat(), 
-                 aes(yintercept = y_threshold)) +
+        geom_point(data = dat(), 
+                   aes(x = x_value, 
+                       y = y_value,
+                       colour = droplet_status)) +
+        geom_vline(data = dat(), 
+                   aes(xintercept = x_threshold)) +
+        geom_hline(data = dat(), 
+                   aes(yintercept = y_threshold)) +
         scale_color_colorblind(breaks = c("double_pos", 
-                                        "only_x_pos", 
-                                        "only_y_pos", 
-                                        "double_neg"), 
-                             labels = c("Double Positive",
-                                        "Only X Axis Positive", 
-                                        "Only Y Axis Positive", 
-                                        "Double Negative")) +
+                                          "only_x_pos", 
+                                          "only_y_pos", 
+                                          "double_neg"), 
+                               labels = c("Double Positive",
+                                          "Only X Axis Positive", 
+                                          "Only Y Axis Positive", 
+                                          "Double Negative")) +
         labs(x = input$x_axis, 
              y = input$y_axis,
              colour = "Droplet Status") +
         theme_bw() 
+      
+    })
+    
+    output$plotout <- renderPlot({
+      req(input$upload)
+      
+      myplot()
     }
     )
     
-    output$counts <- renderTable({
-      
-      req(input$upload)
-      # Table for determining concentration of DNA in copies per reaction
-      dat() %>%
+    output$downloadPlot <- downloadHandler(
+      filename = function() {
+        paste("plot", ".png", sep="")
+      },
+      content = function(file) {
+        png(file=file)
+        plot(myplot())
+        dev.off()
+      }
+    )
+    
+    counts <- reactive({dat() %>%
         mutate(x_axis_call = if_else(x_value > x_threshold, 1, 0), 
                y_axis_call = if_else(y_value > y_threshold, 1 , 0)) %>%
         select(x_axis_call, y_axis_call) %>%
@@ -250,25 +268,46 @@ server <-
         ungroup() %>%
         pivot_wider(names_from = c(x_axis_call, y_axis_call),
                     values_from = "n") %>%
+        
         # calculates the copies per uL using poisson statistics
         mutate(total = sum(select(., contains("_")))) %>%
+        
         # calculate lambda for each axis
         mutate(lambda_x = -log((total - sum(select(., contains("1_"))))/ total),
                lambda_y = -log((total - sum(select(., contains("_1"))))/ total)) %>%
-        # calculate count of droplets 
+        
+        # calculate DNA concentration based 
         mutate(count_x = (lambda_x / 1) * 1000,
                count_y = (lambda_y / 1) * 1000) %>%
-        # calculate confidence interval around each count
+        
+        # calculate 95% confidence interval around DNA concentrations
         mutate(confint_x = (sqrt((lambda_x / total)) * 1.96) * 1000, 
                confint_y = (sqrt((lambda_y / total)) * 1.96) * 1000) %>%
         mutate(count_x = paste0(round(count_x, 2), " [", round(count_x - confint_x, 2), ", ", round(count_x + confint_x, 2), "]"),
                count_y = paste0(round(count_y, 2), " [", round(count_y - confint_y, 2), ", ", round(count_y + confint_y, 2), "]")) %>%
         select(`Concentration of X Axis (copies/uL) [95% CI]` = count_x, 
-               `Concentration of Y Axis (copies/uL) [95% CI]` = count_y)
+               `Concentration of Y Axis (copies/uL) [95% CI]` = count_y)})
+    
+    output$counts <- renderTable({
+      
+      req(input$upload)
+      # Table for determining concentration of DNA in copies per reaction
+      
+      counts()
     }
     
     )
-  
+    
+    output$downloadCounts <- downloadHandler(
+      filename = function() {
+        paste("table", ".csv", sep="")
+      },
+      content = function(file) {
+        write.csv(counts(), file)
+        dev.off()
+      }
+    )
+   
 }
 
 # Run the application 
