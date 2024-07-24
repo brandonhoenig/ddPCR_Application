@@ -315,4 +315,4 @@ shinyApp(ui = ui, server = server)
 
 ## Upcoming Edits
 # make k-means fail and default to INF if clusters cannot be separated by 95% confidence. 
-# Add a download button that downloads a figure with relevant information on it. 
+# make downloadable files names match the input file that is used for easier grouping. 
