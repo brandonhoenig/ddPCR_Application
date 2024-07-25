@@ -255,7 +255,6 @@ server <-
       content = function(file) {
         png(file=file)
         plot(myplot())
-        dev.off()
       }
     )
     
@@ -304,7 +303,6 @@ server <-
       },
       content = function(file) {
         write.csv(counts(), file)
-        dev.off()
       }
     )
    
