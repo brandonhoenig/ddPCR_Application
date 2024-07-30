@@ -106,7 +106,7 @@ ui <-
       column(8, 
              plotOutput("plotout"),
              downloadButton("downloadPlot", 
-             "Download Plot")), 
+                            "Download Plot")), 
       # plots out the summary table for number of copies. 
       column(4, 
              tableOutput("counts"),
@@ -216,7 +216,6 @@ server <-
     
     # renders the ggplot for showing ddPCR droplets and their droplet statuses. 
     myplot <- reactive({
-      
       ggplot() +
         geom_point(data = dat(), 
                    aes(x = x_value, 
@@ -238,7 +237,6 @@ server <-
              y = input$y_axis,
              colour = "Droplet Status") +
         theme_bw() 
-      
     })
     
     output$plotout <- renderPlot({
@@ -249,14 +247,13 @@ server <-
     )
     
     output$downloadPlot <- downloadHandler(
-      filename = function() {
-        paste("plot", ".png", sep="")
-      },
+      filename = function() { paste(input$upload, '.png', sep='') },
       content = function(file) {
-        png(file=file)
-        plot(myplot())
+        device <- function(..., width, height) grDevices::png(..., width = width, height = height, res = 300, units = "in")
+        ggsave(file, plot = myplot(), device = device)
       }
     )
+    
     
     counts <- reactive({dat() %>%
         mutate(x_axis_call = if_else(x_value > x_threshold, 1, 0), 
