@@ -105,13 +105,11 @@ ui <-
     fluidRow(
       column(8, 
              plotOutput("plotout"),
-             downloadButton("downloadPlot", 
-                            "Download Plot")), 
+             uiOutput("download_the_plot")), 
       # plots out the summary table for number of copies. 
       column(4, 
              tableOutput("counts"),
-             downloadButton("downloadCounts", 
-                            "Download Table")),
+             uiOutput("download_the_table")),
     )
     )
     
@@ -246,6 +244,10 @@ server <-
     }
     )
     
+    output$download_the_plot <- renderUI({
+      req(input$upload)
+      downloadButton('downloadPlot', label = 'Download Plot') })
+    
     output$downloadPlot <- downloadHandler(
       filename = function() { paste(input$upload, '.png', sep='') },
       content = function(file) {
@@ -253,6 +255,7 @@ server <-
         ggsave(file, plot = myplot(), device = device)
       }
     )
+    
     
     
     counts <- reactive({dat() %>%
@@ -293,6 +296,10 @@ server <-
     }
     
     )
+    
+    output$download_the_table <- renderUI({
+      req(input$upload)
+      downloadButton('downloadCounts', label = 'Download Table') })
     
     output$downloadCounts <- downloadHandler(
       filename = function() { paste(input$upload, "_counts_",  '.csv', sep='') },
