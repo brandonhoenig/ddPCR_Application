@@ -295,9 +295,7 @@ server <-
     )
     
     output$downloadCounts <- downloadHandler(
-      filename = function() {
-        paste("table", ".csv", sep="")
-      },
+      filename = function() { paste(input$upload, "_counts_",  '.csv', sep='') },
       content = function(file) {
         write.csv(counts(), file)
       }
