@@ -76,6 +76,28 @@ server <-
                    value = NULL)
     })
     
+    # make buttons appear only when file has been uploaded. 
+    output$show_button_y_axis_thresh <- renderUI({
+      req(input$upload)
+      sliderInput(inputId = "y_axis_thresh", 
+                  "Select your threshold for positive droplets on the y axis",
+                  min = 0, 
+                  max = 7000, 
+                  value = 0,
+                  step = 1)
+    })
+    
+    # make buttons appear only when file has been uploaded. 
+    output$show_button_x_axis_thresh <- renderUI({
+      req(input$upload)
+      sliderInput(inputId = "x_axis_thresh", 
+                  "Select your threshold for positive droplets on the x axis",
+                  min = 0, 
+                  max = 7000, 
+                  value = 0,
+                  step = 1)
+    })
+    
     # creates auto thresholds using k-means clustering
     auto_x_threshold <-
       reactive({read_csv(input$upload$datapath, skip = 3) %>%

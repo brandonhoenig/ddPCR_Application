@@ -42,12 +42,7 @@ ui <-
       
       # choosing the threshold for a positive/negative result
       column(3, 
-             sliderInput(inputId = "x_axis_thresh", 
-                         "Select your threshold for positive droplets on the x axis",
-                         min = 0, 
-                         max = 7000, 
-                         value = 0, 
-                         step = 1)),
+             uiOutput("show_button_x_axis_thresh")),
       
       # choosing which channel you want for the x axis
       column(3, 
@@ -60,12 +55,8 @@ ui <-
       
       # choosing the threshold for a positive negative result on y axis. 
       column(3, 
-             sliderInput(inputId = "y_axis_thresh", 
-                         "Select your threshold for positive droplets on the y axis",
-                         min = 0, 
-                         max = 7000, 
-                         value = 0,
-                         step = 1)),
+             uiOutput("show_button_y_axis_thresh")),
+             
       ),
     # plots out the ggplot of the 2 channel ddpcr assay
     fluidRow(
