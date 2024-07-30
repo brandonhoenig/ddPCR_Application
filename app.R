@@ -59,8 +59,7 @@ ui <-
              numericInput(inputId = "button_x_threshold", 
                           "Manually Set X Threshold",
                           value = NULL), 
-             actionButton(inputId = "default_x_threshold",
-                          "K-means Cluster X Threshold"), 
+             uiOutput("default_x_threshold_button"), 
              
              ),
       
@@ -88,8 +87,7 @@ ui <-
              numericInput(inputId = "button_y_threshold", 
                           "Manually Set Y Threshold", 
                           value = NULL), 
-             actionButton(inputId = "default_y_threshold",
-                          "K-means Cluster Y Threshold"), 
+             uiOutput("default_y_threshold_button"),
              ),
       
       # choosing the threshold for a positive negative result on y axis. 
@@ -161,10 +159,9 @@ server <-
           as.numeric()})
     
     # Set default thresholds for positive / negative results using k-means clustering.
-    {observe(req(input$upload))
     observeEvent(input$default_x_threshold,
                  updateSliderInput(session,'x_axis_thresh',
-                                   value = auto_x_threshold()))}
+                                   value = auto_x_threshold()))
     
     observeEvent(input$default_y_threshold,
                  updateSliderInput(session,'y_axis_thresh',
@@ -186,6 +183,16 @@ server <-
     y_threshold <- reactive({
       input$y_axis_thresh
     })
+    
+    # Makes K-means button only appear after a file has been uploaded
+    output$default_y_threshold_button <- renderUI({
+      req(input$upload)
+      actionButton('default_y_threshold', label = 'K-means Cluster Y Threshold') })
+    
+    # Makes K-means button only appear after a file has been uploaded
+    output$default_x_threshold_button <- renderUI({
+      req(input$upload)
+      actionButton('default_x_threshold', label = 'K-means Cluster X Threshold') })
     
     # makes the main input a reactive that can be called instead of reread each time. 
     dat <- reactive({
@@ -314,5 +321,5 @@ server <-
 shinyApp(ui = ui, server = server)
 
 ## Upcoming Edits
-# make k-means fail and default to INF if clusters cannot be separated by 95% confidence. 
-# make downloadable files names match the input file that is used for easier grouping. 
+# make k-means fail and threshold default to INF if clusters cannot be separated by 95% confidence. 
+# only have k-means button appear when a file has been uploaded. 
