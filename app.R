@@ -46,19 +46,12 @@ ui <-
       
       # choosing which channel you want for an x axis. 
       column(3, 
-             selectInput(inputId = "x_axis",
-                       "Which Channel on the x axis?", 
-                       choices = list("", 
-                                      "FAM/EvaGreen" = "Ch1Amplitude",
-                                      "HEX/VIC" = "Ch2Amplitude",
-                                      "Cy5" = "Ch3Amplitude",
-                                      "Cy5.5" = "Ch4Amplitude",
-                                      "ROX" = "Ch5Amplitude",
-                                      "ATTO 590" = "Ch6Amplitude"), 
-                       selected = c("FAM/EvaGreen" = "Ch1Amplitude")),
+             uiOutput("show_x_axis"),
+             
              numericInput(inputId = "button_x_threshold", 
                           "Manually Set X Threshold",
                           value = NULL), 
+             
              uiOutput("default_x_threshold_button"), 
              
              ),
@@ -74,19 +67,12 @@ ui <-
       
       # choosing which channel you want for the x axis
       column(3, 
-             selectInput(inputId = "y_axis",
-                         "Which Channel on the y axis?", 
-                         choices = list("", 
-                                        "FAM/EvaGreen" = "Ch1Amplitude",
-                                        "HEX/VIC" = "Ch2Amplitude",
-                                        "Cy5" = "Ch3Amplitude",
-                                        "Cy5.5" = "Ch4Amplitude",
-                                        "ROX" = "Ch5Amplitude",
-                                        "ATTO 590" = "Ch6Amplitude"),
-                         selected = c("HEX/VIC" = "Ch2Amplitude")),
+             uiOutput("show_y_axis"),
+             
              numericInput(inputId = "button_y_threshold", 
                           "Manually Set Y Threshold", 
                           value = NULL), 
+             
              uiOutput("default_y_threshold_button"),
              ),
       
@@ -121,6 +107,33 @@ server <-
       observe(req(input$upload))
       renderTable(input$upload) 
     }
+    
+    # make buttons appear only when file has been uploaded. 
+    output$show_x_axis <- renderUI({
+      req(input$upload)
+      selectInput(inputId = "x_axis",
+                  "Which Channel on the x axis?", 
+                  choices = list("", 
+                                 "FAM/EvaGreen" = "Ch1Amplitude",
+                                 "HEX/VIC" = "Ch2Amplitude",
+                                 "Cy5" = "Ch3Amplitude",
+                                 "Cy5.5" = "Ch4Amplitude",
+                                 "ROX" = "Ch5Amplitude",
+                                 "ATTO 590" = "Ch6Amplitude"), 
+                  selected = c("FAM/EvaGreen" = "Ch1Amplitude")) })
+    
+    output$show_y_axis <- renderUI({
+      req(input$upload)
+      selectInput(inputId = "y_axis",
+                  "Which Channel on the y axis?", 
+                  choices = list("", 
+                                 "FAM/EvaGreen" = "Ch1Amplitude",
+                                 "HEX/VIC" = "Ch2Amplitude",
+                                 "Cy5" = "Ch3Amplitude",
+                                 "Cy5.5" = "Ch4Amplitude",
+                                 "ROX" = "Ch5Amplitude",
+                                 "ATTO 590" = "Ch6Amplitude"), 
+                  selected = c("HEX/VIC" = "Ch2Amplitude")) })
     
     # creates auto thresholds using k-means clustering
     auto_x_threshold <-
@@ -187,12 +200,14 @@ server <-
     # Makes K-means button only appear after a file has been uploaded
     output$default_y_threshold_button <- renderUI({
       req(input$upload)
-      actionButton('default_y_threshold', label = 'K-means Cluster Y Threshold') })
+      actionButton('default_y_threshold', 
+                   label = 'K-means Cluster Y Threshold') })
     
     # Makes K-means button only appear after a file has been uploaded
     output$default_x_threshold_button <- renderUI({
       req(input$upload)
-      actionButton('default_x_threshold', label = 'K-means Cluster X Threshold') })
+      actionButton('default_x_threshold', 
+                   label = 'K-means Cluster X Threshold') })
     
     # makes the main input a reactive that can be called instead of reread each time. 
     dat <- reactive({
@@ -322,4 +337,4 @@ shinyApp(ui = ui, server = server)
 
 ## Upcoming Edits
 # make k-means fail and threshold default to INF if clusters cannot be separated by 95% confidence. 
-# only have k-means button appear when a file has been uploaded. 
+
