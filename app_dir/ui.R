@@ -1,11 +1,4 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
+## ddPCR App
 
 # load libraries 
 library(shiny)
@@ -62,10 +55,12 @@ ui <-
     fluidRow(
       column(8, 
              plotOutput("plotout"),
+             
              uiOutput("download_the_plot")), 
       # plots out the summary table for number of copies. 
       column(4, 
              tableOutput("counts"),
+             
              uiOutput("download_the_table")),
     )
     )
