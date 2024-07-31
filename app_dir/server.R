@@ -87,6 +87,19 @@ server <-
           select(max) %>%
           as.numeric()})
     
+    # Determine if clusters are accurate or not by looking at sum of squares
+    
+    auto_x_threshold_ss <- reactive({
+    (read_csv(input$upload$datapath, skip = 3) %>%
+        select(input$x_axis) %>%
+        kmeans(., 2) %>%
+        .$betweenss
+      /
+       read_csv(input$upload$datapath, skip = 3) %>%
+        select(input$x_axis) %>%
+        kmeans(., 2) %>%
+        .$totss)})
+    
     # creates auto thresholds using k-means clustering
     auto_y_threshold <- 
       reactive({read_csv(input$upload$datapath, skip = 3) %>%
@@ -105,6 +118,18 @@ server <-
           select(max) %>%
           as.numeric()})
     
+    # Determine if clusters are accurate or not by looking at sum of squares
+    auto_y_threshold_ss <- reactive({
+      (read_csv(input$upload$datapath, skip = 3) %>%
+         select(input$y_axis) %>%
+         kmeans(., 2) %>%
+         .$betweenss
+       /
+         read_csv(input$upload$datapath, skip = 3) %>%
+         select(input$y_axis) %>%
+         kmeans(., 2) %>%
+         .$totss)})
+    
     # make buttons appear only when file has been uploaded. 
     output$show_button_y_axis_thresh <- renderUI({
       req(input$upload)
@@ -112,7 +137,7 @@ server <-
                   "Select your threshold for positive droplets on the y axis",
                   min = 0, 
                   max = 20000, 
-                  value = auto_y_threshold(),
+                  value = if_else(auto_y_threshold_ss() > 0.9, auto_y_threshold(), 20000),
                   step = 5)
     })
     
@@ -123,7 +148,7 @@ server <-
                   "Select your threshold for positive droplets on the x axis",
                   min = 0, 
                   max = 20000, 
-                  value = auto_x_threshold(),
+                  value = if_else(auto_x_threshold_ss() > 0.9, auto_x_threshold(), 20000),
                   step = 5)
     })
     
