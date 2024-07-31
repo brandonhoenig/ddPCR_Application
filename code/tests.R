@@ -1,5 +1,5 @@
 library(tidyverse)
-
+library(ClusterR)
 holder <- read_csv(paste0("example_data/", list.files("example_data/")[1]),
                    skip = 3)
 
@@ -10,8 +10,8 @@ holder %>%
 
 km <-
 holder %>%
-  select(Ch1Amplitude) %>%
-  kmeans(., 3) #%>% 
+  select(Ch2Amplitude) %>%
+  kmeans(., 2) #%>% 
   .$cluster %>% 
   cbind(holder %>% 
           select(Ch2Amplitude)) %>%
@@ -25,9 +25,39 @@ holder %>%
   select(max) %>%
   as.numeric()
   
-  km$betweenss / km$totss
+  km$tot.withinss
+  
+km$betweenss / km$totss
+  
+holder %>%
+  select(Ch2Amplitude) %>%
+  kmeans(., 2) %>%
+  .$withinss
+
+km_ss <-
+(holder %>%
+  select(Ch1Amplitude) %>%
+  kmeans(., 2) %>%
+  .$betweenss
+
+/
+
+holder %>%
+  select(Ch1Amplitude) %>%
+  kmeans(., 2) %>%
+  .$totss)
   
   
-  
-holder %>% nrow()
+gmm <-
+GMM(holder[2], 
+    gaussian_comps = 2)
+
+gmm$centroids %>%
+  mean()
+
+gm_predict <-
+predict(gm, holder[2])
+
+
+
   
