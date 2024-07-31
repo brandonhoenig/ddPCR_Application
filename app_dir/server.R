@@ -75,9 +75,9 @@ server <-
       sliderInput(inputId = "y_axis_thresh", 
                   "Select your threshold for positive droplets on the y axis",
                   min = 0, 
-                  max = 7000, 
+                  max = 20000, 
                   value = 0,
-                  step = 1)
+                  step = 10)
     })
     
     # make buttons appear only when file has been uploaded. 
@@ -86,9 +86,9 @@ server <-
       sliderInput(inputId = "x_axis_thresh", 
                   "Select your threshold for positive droplets on the x axis",
                   min = 0, 
-                  max = 7000, 
+                  max = 20000, 
                   value = 0,
-                  step = 1)
+                  step = 10)
     })
     
     # creates auto thresholds using k-means clustering
@@ -126,6 +126,13 @@ server <-
           filter(x == "Negative") %>%
           select(max) %>%
           as.numeric()})
+    
+    # Get number of droplets and display it on the ggplot
+    number_of_droplets <- reactive(
+      {
+      read_csv(input$upload$datapath, skip = 3) %>%
+            nrow()
+      })
     
     # Set default thresholds for positive / negative results using k-means clustering.
     observeEvent(input$default_x_threshold,
@@ -201,6 +208,16 @@ server <-
                    aes(xintercept = x_threshold)) +
         geom_hline(data = dat(), 
                    aes(yintercept = y_threshold)) +
+        annotate(geom = 'label', 
+                 label = paste("Total Droplets:", number_of_droplets(), "\n" ,
+                               "X Threshold:", x_threshold(), "\n",
+                               "Y Threshold:", y_threshold(), "\n",
+                               "X Concentration:", counts()[1], "\n",
+                               "Y Concentration:", counts()[2]),
+                 x = Inf, 
+                 y = Inf, 
+                 hjust = 1, 
+                 vjust = 1) +
         scale_color_colorblind(breaks = c("double_pos", 
                                           "only_x_pos", 
                                           "only_y_pos", 
@@ -209,8 +226,8 @@ server <-
                                           "Only X Axis Positive", 
                                           "Only Y Axis Positive", 
                                           "Double Negative")) +
-        labs(x = input$x_axis, 
-             y = input$y_axis,
+        labs(x = names(channel_choices[channel_choices == input$x_axis]), 
+             y = names(channel_choices[channel_choices == input$y_axis]),
              colour = "Droplet Status") +
         theme_bw() 
     })

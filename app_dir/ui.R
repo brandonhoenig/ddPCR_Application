@@ -60,15 +60,16 @@ ui <-
       ),
     # plots out the ggplot of the 2 channel ddpcr assay
     fluidRow(
-      column(8, 
+      column(12, 
+             align = 'center',
              plotOutput("plotout"),
              
              uiOutput("download_the_plot")), 
       # plots out the summary table for number of copies. 
-      column(4, 
-             tableOutput("counts"),
-             
-             uiOutput("download_the_table")),
+      # column(4, 
+      #        tableOutput("counts"),
+      #        
+      #        uiOutput("download_the_table"))
     )
     )
     
