@@ -24,8 +24,7 @@ ui <-
              fileInput(inputId = "upload", 
                        "Upload a ddPCR .csv file here",
                        multiple = F,
-                       accept = '.csv'),
-             # tableOutput("file"))
+                       accept = '.csv')
              ),
       column(4, 
              tableOutput("file"))),
