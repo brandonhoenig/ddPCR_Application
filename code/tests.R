@@ -1,6 +1,6 @@
 library(tidyverse)
 library(ClusterR)
-holder <- read_csv(paste0("example_data/", list.files("example_data/")[1]),
+holder <- read_csv(paste0("example_data/", list.files("example_data/")[3]),
                    skip = 3)
 
 holder %>%
@@ -10,11 +10,11 @@ holder %>%
 
 km <-
 holder %>%
-  select(Ch2Amplitude) %>%
-  kmeans(., 2) #%>% 
+  select(Ch1Amplitude) %>%
+  kmeans(., 2) %>% 
   .$cluster %>% 
   cbind(holder %>% 
-          select(Ch2Amplitude)) %>%
+          select(Ch1Amplitude)) %>%
   clean_some_names(1) %>%
   group_by(x) %>%
   summarise_all(c(max = max, 
@@ -25,7 +25,9 @@ holder %>%
   select(max) %>%
   as.numeric()
   
-  km$tot.withinss
+  km$centers
+  
+  $tot.withinss
   
 km$betweenss / km$totss
   
