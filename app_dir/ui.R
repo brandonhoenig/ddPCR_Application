@@ -2,6 +2,13 @@
 
 # load libraries 
 library(shiny)
+library(tidyverse)
+library(shinyWidgets)
+library(shinythemes)
+library(ggthemes)
+library(plotly)
+library(janitor)
+
 # Define UI for application
 ui <- 
   

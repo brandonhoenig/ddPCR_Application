@@ -1,6 +1,6 @@
 ## ddPCR App
 
-# load libraries 
+## Load libraries 
 
 library(shiny)
 library(tidyverse)
@@ -10,11 +10,22 @@ library(ggthemes)
 library(plotly)
 library(janitor)
 
+## Needed functions
 # Clean some names function 
 clean_some_names <- function(dat, idx, ...) {
   names(dat)[idx] <- janitor::make_clean_names(names(dat)[idx], ...)
   dat
 }
+
+## Needed objects. 
+# 
+channel_choices <- 
+  list("FAM/EvaGreen" = "Ch1Amplitude",
+       "HEX/VIC" = "Ch2Amplitude",
+       "Cy5" = "Ch3Amplitude",
+       "Cy5.5" = "Ch4Amplitude",
+       "ROX" = "Ch5Amplitude",
+       "ATTO 590" = "Ch6Amplitude")
 
 # Define server logic
 server <- 
@@ -31,42 +42,31 @@ server <-
       req(input$upload)
       selectInput(inputId = "x_axis",
                   "Which Channel on the x axis?", 
-                  choices = list("", 
-                                 "FAM/EvaGreen" = "Ch1Amplitude",
-                                 "HEX/VIC" = "Ch2Amplitude",
-                                 "Cy5" = "Ch3Amplitude",
-                                 "Cy5.5" = "Ch4Amplitude",
-                                 "ROX" = "Ch5Amplitude",
-                                 "ATTO 590" = "Ch6Amplitude"), 
+                  choices = channel_choices, 
                   selected = c("FAM/EvaGreen" = "Ch1Amplitude")) })
-    # make buttons appear only when file has been uploaded.  
+   
+     # make buttons appear only when file has been uploaded.  
     output$show_y_axis <- renderUI({
       req(input$upload)
       selectInput(inputId = "y_axis",
                   "Which Channel on the y axis?", 
-                  choices = list("", 
-                                 "FAM/EvaGreen" = "Ch1Amplitude",
-                                 "HEX/VIC" = "Ch2Amplitude",
-                                 "Cy5" = "Ch3Amplitude",
-                                 "Cy5.5" = "Ch4Amplitude",
-                                 "ROX" = "Ch5Amplitude",
-                                 "ATTO 590" = "Ch6Amplitude"), 
+                  choices = channel_choices, 
                   selected = c("HEX/VIC" = "Ch2Amplitude")) })
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_x_threshold <- renderUI({
       req(input$upload)
       numericInput(inputId = "button_x_threshold", 
-                   "Manually Set X Threshold",
-                   value = NULL)
+                   "Type to Manually Set X Threshold",
+                   value = round(auto_x_threshold(), 0))
     })
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_y_threshold <- renderUI({
       req(input$upload)
       numericInput(inputId = "button_y_threshold", 
-                   "Manually Set Y Threshold",
-                   value = NULL)
+                   "Type to Manually Set Y Threshold",
+                   value = round(auto_y_threshold(), 0))
     })
     
     # make buttons appear only when file has been uploaded. 
@@ -235,7 +235,8 @@ server <-
       }
     )
     
-    counts <- reactive({dat() %>%
+    counts <- reactive({
+      dat() %>%
         mutate(x_axis_call = if_else(x_value > x_threshold, 1, 0), 
                y_axis_call = if_else(y_value > y_threshold, 1 , 0)) %>%
         select(x_axis_call, y_axis_call) %>%
