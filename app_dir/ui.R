@@ -20,13 +20,15 @@ ui <-
     
     # File upload button
     fluidRow(
-      column(8,
+      column(4,
              fileInput(inputId = "upload", 
                        "Upload a ddPCR .csv file here",
                        multiple = F,
                        accept = '.csv'),
+             # tableOutput("file"))
+             ),
+      column(4, 
              tableOutput("file"))),
-    
     # Fluid row for handling slider inputs
     fluidRow(
       
