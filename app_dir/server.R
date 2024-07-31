@@ -17,8 +17,12 @@ clean_some_names <- function(dat, idx, ...) {
   dat
 }
 
-## Needed objects. 
-# 
+# randomly order column
+randomly <- function(x) sample(xtfrm(x))
+
+## Needed objects.
+
+# move channel choices here so we don't have to retype them everytime. 
 channel_choices <- 
   list("FAM/EvaGreen" = "Ch1Amplitude",
        "HEX/VIC" = "Ch2Amplitude",
@@ -27,11 +31,32 @@ channel_choices <-
        "ROX" = "Ch5Amplitude",
        "ATTO 590" = "Ch6Amplitude")
 
+#make up some fake data for an example
+example_data <-
+  tibble(Ch1Amplitude = c(rnorm(10000, 3000, 500),
+                          rnorm(10000, 500, 50))) %>%
+    arrange(randomly(Ch1Amplitude)) %>%
+    cbind(
+      tibble(Ch2Amplitude = c(rnorm(10000, 3000, 500),
+                              rnorm(10000, 500, 50)))
+    ) %>% 
+    cbind(
+      tibble(Ch3Amplitude = rnorm(20000, 3000, 2000), 
+             Ch4Amplitude = rnorm(20000, 3000, 2000), 
+             Ch5Amplitude = rnorm(20000, 3000, 2000), 
+             Ch6Amplitude = rnorm(20000, 3000, 2000))
+    )
+
 # Define server logic
 server <- 
   function(input, output, session) {
     
     # renders the information on the table that is input. 
+    output$file <- {
+      observe(req(input$upload))
+      renderTable(input$upload$name) 
+    }
+    
     output$file <- {
       observe(req(input$upload))
       renderTable(input$upload$name) 
