@@ -34,7 +34,7 @@ server <-
     # renders the information on the table that is input. 
     output$file <- {
       observe(req(input$upload))
-      renderTable(input$upload) 
+      renderTable(input$upload$name) 
     }
     
     # make buttons appear only when file has been uploaded. 
@@ -67,28 +67,6 @@ server <-
       numericInput(inputId = "button_y_threshold", 
                    "Type to Manually Set Y Threshold",
                    value = round(auto_y_threshold(), 0))
-    })
-    
-    # make buttons appear only when file has been uploaded. 
-    output$show_button_y_axis_thresh <- renderUI({
-      req(input$upload)
-      sliderInput(inputId = "y_axis_thresh", 
-                  "Select your threshold for positive droplets on the y axis",
-                  min = 0, 
-                  max = 20000, 
-                  value = 0,
-                  step = 10)
-    })
-    
-    # make buttons appear only when file has been uploaded. 
-    output$show_button_x_axis_thresh <- renderUI({
-      req(input$upload)
-      sliderInput(inputId = "x_axis_thresh", 
-                  "Select your threshold for positive droplets on the x axis",
-                  min = 0, 
-                  max = 20000, 
-                  value = 0,
-                  step = 10)
     })
     
     # creates auto thresholds using k-means clustering
@@ -127,6 +105,28 @@ server <-
           select(max) %>%
           as.numeric()})
     
+    # make buttons appear only when file has been uploaded. 
+    output$show_button_y_axis_thresh <- renderUI({
+      req(input$upload)
+      sliderInput(inputId = "y_axis_thresh", 
+                  "Select your threshold for positive droplets on the y axis",
+                  min = 0, 
+                  max = 20000, 
+                  value = auto_y_threshold(),
+                  step = 5)
+    })
+    
+    # make buttons appear only when file has been uploaded. 
+    output$show_button_x_axis_thresh <- renderUI({
+      req(input$upload)
+      sliderInput(inputId = "x_axis_thresh", 
+                  "Select your threshold for positive droplets on the x axis",
+                  min = 0, 
+                  max = 20000, 
+                  value = auto_x_threshold(),
+                  step = 5)
+    })
+    
     # Get number of droplets and display it on the ggplot
     number_of_droplets <- reactive(
       {
@@ -164,13 +164,19 @@ server <-
     output$default_y_threshold_button <- renderUI({
       req(input$upload)
       actionButton('default_y_threshold', 
-                   label = 'K-means Cluster Y Threshold') })
+                   label = paste('Reset', 
+                                 names(channel_choices[channel_choices == input$y_axis]), 
+                                 "Threshold")) 
+      })
     
     # Makes K-means button only appear after a file has been uploaded
     output$default_x_threshold_button <- renderUI({
       req(input$upload)
       actionButton('default_x_threshold', 
-                   label = 'K-means Cluster X Threshold') })
+                   label = paste('Reset', 
+                                 names(channel_choices[channel_choices == input$x_axis]), 
+                                 "Threshold")) 
+    })
     
     # makes the main input a reactive that can be called instead of reread each time. 
     dat <- reactive({
@@ -210,10 +216,10 @@ server <-
                    aes(yintercept = y_threshold)) +
         annotate(geom = 'label', 
                  label = paste("Total Droplets:", number_of_droplets(), "\n" ,
-                               "X Threshold:", x_threshold(), "\n",
-                               "Y Threshold:", y_threshold(), "\n",
-                               "X Concentration:", counts()[1], "\n",
-                               "Y Concentration:", counts()[2]),
+                               names(channel_choices[channel_choices == input$x_axis]), "Threshold:", x_threshold(), "\n",
+                               names(channel_choices[channel_choices == input$y_axis]), "Threshold:", y_threshold(), "\n",
+                               names(channel_choices[channel_choices == input$x_axis]), "copies/uL:", counts()[1], "\n",
+                               names(channel_choices[channel_choices == input$y_axis]), "copies/uL:", counts()[2]),
                  x = Inf, 
                  y = Inf, 
                  hjust = 1, 
@@ -223,8 +229,8 @@ server <-
                                           "only_y_pos", 
                                           "double_neg"), 
                                labels = c("Double Positive",
-                                          "Only X Axis Positive", 
-                                          "Only Y Axis Positive", 
+                                          paste("Only",names(channel_choices[channel_choices == input$x_axis])  ,"Positive"), 
+                                          paste("Only", names(channel_choices[channel_choices == input$y_axis]),"Positive"), 
                                           "Double Negative")) +
         labs(x = names(channel_choices[channel_choices == input$x_axis]), 
              y = names(channel_choices[channel_choices == input$y_axis]),
