@@ -1,6 +1,6 @@
 library(tidyverse)
 
-holder <- read_csv(paste0("example_data/", list.files("example_data/")),
+holder <- read_csv(paste0("example_data/", list.files("example_data/")[1]),
                    skip = 3)
 
 holder %>%
@@ -26,4 +26,8 @@ holder %>%
   as.numeric()
   
   km$betweenss / km$totss
+  
+  
+  
+holder %>% nrow()
   
