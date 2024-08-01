@@ -51,20 +51,33 @@ example_data <-
 server <- 
   function(input, output, session) {
     
+    #
+    Data <- reactiveVal()
+    
+    observeEvent(
+      input$upload, 
+      {dat <- read_csv(input$upload$datapath, skip = 3)
+      Data(dat)})
+    
+    observeEvent(
+      input$example, 
+      {Data(example_data)}
+    )
+    
+    sample_data <-
+      reactive({
+        Data()
+      }) |> bindEvent(Data())
+    
     # renders the information on the table that is input. 
     output$file <- {
-      observe(req(input$upload))
-      renderTable(input$upload$name) 
-    }
-    
-    output$file <- {
-      observe(req(input$upload))
+      observe(req(sample_data()))
       renderTable(input$upload$name) 
     }
     
     # make buttons appear only when file has been uploaded. 
     output$show_x_axis <- renderUI({
-      req(input$upload)
+      req(sample_data())
       selectInput(inputId = "x_axis",
                   "Which Channel on the x axis?", 
                   choices = channel_choices, 
@@ -72,7 +85,7 @@ server <-
    
      # make buttons appear only when file has been uploaded.  
     output$show_y_axis <- renderUI({
-      req(input$upload)
+      req(sample_data())
       selectInput(inputId = "y_axis",
                   "Which Channel on the y axis?", 
                   choices = channel_choices, 
@@ -80,7 +93,7 @@ server <-
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_x_threshold <- renderUI({
-      req(input$upload)
+      req(sample_data())
       numericInput(inputId = "button_x_threshold", 
                    "Type to Manually Set X Threshold",
                    value = round(auto_x_threshold(), 0))
@@ -88,7 +101,7 @@ server <-
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_y_threshold <- renderUI({
-      req(input$upload)
+      req(sample_data())
       numericInput(inputId = "button_y_threshold", 
                    "Type to Manually Set Y Threshold",
                    value = round(auto_y_threshold(), 0))
@@ -96,11 +109,11 @@ server <-
     
     # creates auto thresholds using k-means clustering
     auto_x_threshold <-
-      reactive({read_csv(input$upload$datapath, skip = 3) %>%
+      reactive({sample_data() %>%
           select(input$x_axis) %>%
           kmeans(., 2) %>%
           .$cluster %>%
-          cbind(read_csv(input$upload$datapath, skip = 3) %>% 
+          cbind(sample_data() %>% 
                   select(input$x_axis)) %>%
           clean_some_names(1) %>%
           group_by(x) %>%
@@ -115,23 +128,23 @@ server <-
     # Determine if clusters are accurate or not by looking at sum of squares
     
     auto_x_threshold_ss <- reactive({
-    (read_csv(input$upload$datapath, skip = 3) %>%
+    (sample_data() %>%
         select(input$x_axis) %>%
         kmeans(., 2) %>%
         .$betweenss
       /
-       read_csv(input$upload$datapath, skip = 3) %>%
+       sample_data() %>%
         select(input$x_axis) %>%
         kmeans(., 2) %>%
         .$totss)})
     
     # creates auto thresholds using k-means clustering
     auto_y_threshold <- 
-      reactive({read_csv(input$upload$datapath, skip = 3) %>%
+      reactive({sample_data() %>%
           select(input$y_axis) %>%
           kmeans(., 2) %>%
           .$cluster %>%
-          cbind(read_csv(input$upload$datapath, skip = 3) %>% 
+          cbind(sample_data() %>% 
                   select(input$y_axis)) %>%
           clean_some_names(1) %>%
           group_by(x) %>%
@@ -145,19 +158,19 @@ server <-
     
     # Determine if clusters are accurate or not by looking at sum of squares
     auto_y_threshold_ss <- reactive({
-      (read_csv(input$upload$datapath, skip = 3) %>%
+      (sample_data() %>%
          select(input$y_axis) %>%
          kmeans(., 2) %>%
          .$betweenss
        /
-         read_csv(input$upload$datapath, skip = 3) %>%
+         sample_data() %>%
          select(input$y_axis) %>%
          kmeans(., 2) %>%
          .$totss)})
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_y_axis_thresh <- renderUI({
-      req(input$upload)
+      req(sample_data())
       sliderInput(inputId = "y_axis_thresh", 
                   "Select your threshold for positive droplets on the y axis",
                   min = 0, 
@@ -168,7 +181,7 @@ server <-
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_x_axis_thresh <- renderUI({
-      req(input$upload)
+      req(sample_data())
       sliderInput(inputId = "x_axis_thresh", 
                   "Select your threshold for positive droplets on the x axis",
                   min = 0, 
@@ -180,7 +193,7 @@ server <-
     # Get number of droplets and display it on the ggplot
     number_of_droplets <- reactive(
       {
-      read_csv(input$upload$datapath, skip = 3) %>%
+      sample_data() %>%
             nrow()
       })
     
@@ -212,7 +225,7 @@ server <-
     
     # Makes K-means button only appear after a file has been uploaded
     output$default_y_threshold_button <- renderUI({
-      req(input$upload)
+      req(sample_data())
       actionButton('default_y_threshold', 
                    label = paste('Reset', 
                                  names(channel_choices[channel_choices == input$y_axis]), 
@@ -221,7 +234,7 @@ server <-
     
     # Makes K-means button only appear after a file has been uploaded
     output$default_x_threshold_button <- renderUI({
-      req(input$upload)
+      req(sample_data())
       actionButton('default_x_threshold', 
                    label = paste('Reset', 
                                  names(channel_choices[channel_choices == input$x_axis]), 
@@ -230,7 +243,7 @@ server <-
     
     # makes the main input a reactive that can be called instead of reread each time. 
     dat <- reactive({
-      read_csv(input$upload$datapath, skip = 3) %>%
+      sample_data() %>%
         
         # puts threshold into the table. 
         mutate(x_threshold = x_threshold(), 
@@ -289,7 +302,7 @@ server <-
     })
     
     output$plotout <- renderPlot({
-      req(input$upload)
+      req(sample_data())
       
       myplot()
     }
@@ -297,7 +310,7 @@ server <-
     
     # this makes the download plot button only appear when and input is uploaded. 
     output$download_the_plot <- renderUI({
-      req(input$upload)
+      req(sample_data())
       downloadButton('downloadPlot', label = 'Download Plot') })
     
     output$downloadPlot <- downloadHandler(
@@ -340,7 +353,7 @@ server <-
     
     output$counts <- renderTable({
       
-      req(input$upload)
+      req(sample_data())
       # Table for determining concentration of DNA in copies per reaction
       
       counts()
@@ -349,7 +362,7 @@ server <-
     )
     
     output$download_the_table <- renderUI({
-      req(input$upload)
+      req(sample_data())
       downloadButton('downloadCounts', label = 'Download Table') })
     
     output$downloadCounts <- downloadHandler(
