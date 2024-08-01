@@ -73,12 +73,7 @@ ui <-
              align = 'center',
              plotOutput("plotout"),
              
-             uiOutput("download_the_plot")), 
-      # plots out the summary table for number of copies. 
-      # column(4, 
-      #        tableOutput("counts"),
-      #        
-      #        uiOutput("download_the_table"))
+             uiOutput("download_the_plot")),
     )
     )
     
