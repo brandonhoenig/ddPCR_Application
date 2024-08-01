@@ -5,7 +5,7 @@ account: brandonhoenig
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12390728
-bundleId: 8930807
+bundleId: 8935988
 url: https://brandonhoenig.shinyapps.io/app_dir/
 version: 1
 asMultiple: FALSE

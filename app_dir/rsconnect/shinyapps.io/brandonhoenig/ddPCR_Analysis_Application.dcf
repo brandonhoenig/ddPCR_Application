@@ -5,7 +5,7 @@ account: brandonhoenig
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12390783
-bundleId: 8929559
+bundleId: 8936055
 url: https://brandonhoenig.shinyapps.io/ddPCR_Analysis_Application/
 version: 1
 asMultiple: FALSE
