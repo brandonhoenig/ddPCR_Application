@@ -28,6 +28,14 @@ ui <-
              ),
       column(4, 
              tableOutput("file"))),
+    fluidRow(
+      column(4, 
+             actionButton(
+               "example", "Or use 'example' dataset", 
+               class = "btn-block"
+             ))
+    ),
+    
     # Fluid row for handling slider inputs
     fluidRow(
       
