@@ -43,7 +43,7 @@ ui <-
       column(3, 
              uiOutput("show_x_axis"),
              
-             # uiOutput("show_button_x_threshold"),
+             uiOutput("show_button_x_threshold"),
              
              uiOutput("default_x_threshold_button"), 
              
@@ -57,7 +57,7 @@ ui <-
       column(3, 
              uiOutput("show_y_axis"),
              
-             # uiOutput("show_button_y_threshold"),
+             uiOutput("show_button_y_threshold"),
              
              uiOutput("default_y_threshold_button"),
              ),
