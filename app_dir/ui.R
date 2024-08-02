@@ -22,7 +22,7 @@ ui <-
     fluidRow(
       column(4,
              fileInput(inputId = "upload", 
-                       "Upload a ddPCR .csv file here",
+                       "Upload a BioRad QX600 .csv file here",
                        multiple = F,
                        accept = '.csv')
              ),
