@@ -33,18 +33,18 @@ channel_choices <-
 
 #make up some fake data for an example
 example_data <-
-  tibble(Ch1Amplitude = c(rnorm(10000, 3000, 500),
-                          rnorm(10000, 500, 50))) %>%
+  tibble(Ch1Amplitude = c(rnorm(5000, 5000, 500),
+                          rnorm(15000, 500, 50))) %>%
     arrange(randomly(Ch1Amplitude)) %>%
     cbind(
-      tibble(Ch2Amplitude = c(rnorm(10000, 3000, 500),
-                              rnorm(10000, 500, 50)))
+      tibble(Ch2Amplitude = c(rnorm(2000, 4500, 500),
+                              rnorm(18000, 1000, 50)))
     ) %>% 
     cbind(
-      tibble(Ch3Amplitude = rnorm(20000, 3000, 2000), 
-             Ch4Amplitude = rnorm(20000, 3000, 2000), 
-             Ch5Amplitude = rnorm(20000, 3000, 2000), 
-             Ch6Amplitude = rnorm(20000, 3000, 2000))
+      tibble(Ch3Amplitude = rnorm(20000, 300, 2000), 
+             Ch4Amplitude = rnorm(20000, 300, 2000), 
+             Ch5Amplitude = rnorm(20000, 300, 2000), 
+             Ch6Amplitude = rnorm(20000, 300, 2000))
     )
 
 # Define server logic
@@ -52,22 +52,22 @@ server <-
   function(input, output, session) {
     
     #
-    Data <- reactiveVal()
+    sample_data <- reactiveVal()
     
     observeEvent(
       input$upload, 
-      {dat <- read_csv(input$upload$datapath, skip = 3)
-      Data(dat)})
+      {data_2 <- read_csv(input$upload$datapath, skip = 3)
+      sample_data(data_2)})
     
     observeEvent(
       input$example, 
-      {Data(example_data)}
+      {sample_data(example_data)}
     )
     
-    sample_data <-
-      reactive({
-        Data()
-      }) |> bindEvent(Data())
+    # sample_data <-
+    #   reactive({
+    #     Data()
+    #   }) |> bindEvent(Data())
     
     # renders the information on the table that is input. 
     output$file <- {
@@ -96,7 +96,7 @@ server <-
       req(sample_data())
       numericInput(inputId = "button_x_threshold", 
                    "Type to Manually Set X Threshold",
-                   value = round(auto_x_threshold(), 0))
+                   value = if_else(auto_x_threshold_ss() > 0.9, round(auto_x_threshold(), 0), 0))
     })
     
     # make buttons appear only when file has been uploaded. 
@@ -104,14 +104,17 @@ server <-
       req(sample_data())
       numericInput(inputId = "button_y_threshold", 
                    "Type to Manually Set Y Threshold",
-                   value = round(auto_y_threshold(), 0))
+                   value = if_else(auto_y_threshold_ss() > 0.9, round(auto_y_threshold(), 0), 0))
     })
     
+    # run kmeans on x axis
+    x_axis_k_means <- reactive({sample_data() %>%
+        select(input$x_axis) %>%
+        kmeans(., 2, iter.max = 10000)})
+    
     # creates auto thresholds using k-means clustering
-    auto_x_threshold <-
-      reactive({sample_data() %>%
-          select(input$x_axis) %>%
-          kmeans(., 2) %>%
+    auto_x_threshold_check <-
+      reactive({x_axis_k_means() %>%
           .$cluster %>%
           cbind(sample_data() %>% 
                   select(input$x_axis)) %>%
@@ -119,30 +122,37 @@ server <-
           group_by(x) %>%
           summarise_all(c(max = max, 
                           min = min)) %>%
-          arrange(max) %>%
+          arrange(min) %>%
           mutate(x = c("Negative", "Positive")) %>%
-          filter(x == "Negative") %>%
-          select(max) %>%
-          as.numeric()})
+          filter(x == "Positive") %>%
+          select(min) %>%
+          as.numeric() - 1})
     
     # Determine if clusters are accurate or not by looking at sum of squares
     
     auto_x_threshold_ss <- reactive({
-    (sample_data() %>%
-        select(input$x_axis) %>%
-        kmeans(., 2) %>%
+    (x_axis_k_means() %>%
         .$betweenss
       /
-       sample_data() %>%
-        select(input$x_axis) %>%
-        kmeans(., 2) %>%
-        .$totss)})
+       x_axis_k_means() %>%
+        .$totss)
+      })
+    
+    # create a new reactive in the event that a threshold can't be created. 
+    auto_x_threshold <- reactive({
+      ifelse(auto_x_threshold_ss() > 0.9, auto_x_threshold_check(), 0)
+        
+    })
+      
+    
+    # run kmeans on y axis
+    y_axis_k_means <- reactive({sample_data() %>%
+        select(input$y_axis) %>%
+        kmeans(., 2, iter.max = 10000)})
     
     # creates auto thresholds using k-means clustering
-    auto_y_threshold <- 
-      reactive({sample_data() %>%
-          select(input$y_axis) %>%
-          kmeans(., 2) %>%
+    auto_y_threshold_check <- 
+      reactive({y_axis_k_means() %>%
           .$cluster %>%
           cbind(sample_data() %>% 
                   select(input$y_axis)) %>%
@@ -150,23 +160,25 @@ server <-
           group_by(x) %>%
           summarise_all(c(max = max, 
                           min = min)) %>%
-          arrange(max) %>%
+          arrange(min) %>%
           mutate(x = c("Negative", "Positive")) %>%
-          filter(x == "Negative") %>%
-          select(max) %>%
-          as.numeric()})
+          filter(x == "Positive") %>%
+          select(min) %>%
+          as.numeric() - 1})
     
     # Determine if clusters are accurate or not by looking at sum of squares
     auto_y_threshold_ss <- reactive({
-      (sample_data() %>%
-         select(input$y_axis) %>%
-         kmeans(., 2) %>%
+      (y_axis_k_means() %>%
          .$betweenss
        /
-         sample_data() %>%
-         select(input$y_axis) %>%
-         kmeans(., 2) %>%
+         y_axis_k_means() %>%
          .$totss)})
+    
+    # create a new reactive in the event that a threshold can't be created. 
+    auto_y_threshold <- reactive({
+      ifelse(auto_y_threshold_ss() > 0.9, auto_y_threshold_check(), 0)
+      
+    })
     
     # make buttons appear only when file has been uploaded. 
     output$show_button_y_axis_thresh <- renderUI({
@@ -175,7 +187,7 @@ server <-
                   "Select your threshold for positive droplets on the y axis",
                   min = 0, 
                   max = 20000, 
-                  value = if_else(auto_y_threshold_ss() > 0.9, auto_y_threshold(), 20000),
+                  value = if_else(auto_y_threshold_ss() > 0.9, auto_y_threshold(), 0),
                   step = 5)
     })
     
@@ -186,7 +198,7 @@ server <-
                   "Select your threshold for positive droplets on the x axis",
                   min = 0, 
                   max = 20000, 
-                  value = if_else(auto_x_threshold_ss() > 0.9, auto_x_threshold(), 20000),
+                  value = if_else(auto_x_threshold_ss() > 0.9, auto_x_threshold(), 0),
                   step = 5)
     })
     
@@ -273,10 +285,10 @@ server <-
                    aes(x = x_value, 
                        y = y_value,
                        colour = droplet_status)) +
-        geom_vline(data = dat(), 
-                   aes(xintercept = x_threshold)) +
-        geom_hline(data = dat(), 
-                   aes(yintercept = y_threshold)) +
+        geom_vline(data = NULL, 
+                   aes(xintercept = if_else(auto_x_threshold_ss() > 0.9 | input$x_axis_thresh != 0, x_threshold(), NA))) +
+        geom_hline(data = NULL, 
+                   aes(yintercept = if_else(auto_y_threshold_ss() > 0.9 | input$y_axis_thresh != 0, y_threshold(), NA))) +
         annotate(geom = 'label', 
                  label = paste("Total Droplets:", number_of_droplets(), "\n" ,
                                names(channel_choices[channel_choices == input$x_axis]), "Threshold:", x_threshold(), "\n",
@@ -298,7 +310,8 @@ server <-
         labs(x = names(channel_choices[channel_choices == input$x_axis]), 
              y = names(channel_choices[channel_choices == input$y_axis]),
              colour = "Droplet Status") +
-        theme_bw() 
+        theme_bw() +
+        theme(legend.position = 'none')
     })
     
     output$plotout <- renderPlot({
