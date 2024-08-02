@@ -258,8 +258,8 @@ server <-
       sample_data() %>%
         
         # puts threshold into the table. 
-        mutate(x_threshold = x_threshold(), 
-               y_threshold = y_threshold()) %>%
+        mutate(x_threshold = if_else(auto_x_threshold_ss() > 0.9 | input$x_axis_thresh != 0, x_threshold(), Inf), 
+               y_threshold = if_else(auto_y_threshold_ss() > 0.9 | input$y_axis_thresh != 0, y_threshold(), Inf)) %>%
         
         # selects only the relevant data. 
         select(x_value = input$x_axis, 
