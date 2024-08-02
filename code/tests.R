@@ -1,6 +1,6 @@
 library(tidyverse)
 library(ClusterR)
-holder <- read_csv(paste0("example_data/", list.files("example_data/")[3]),
+holder <- read_csv(paste0("example_data/", list.files("example_data/")[2]),
                    skip = 3)
 
 holder %>%
@@ -8,7 +8,7 @@ holder %>%
              y = Ch2Amplitude)) +
   geom_point()
 
-km <-
+#km <-
 holder %>%
   select(Ch1Amplitude) %>%
   kmeans(., 2) %>% 
@@ -18,12 +18,12 @@ holder %>%
   clean_some_names(1) %>%
   group_by(x) %>%
   summarise_all(c(max = max, 
-                  min = min)) %>%
+                  min = min)) %>% 
   arrange(max) %>%
   mutate(x = c("Negative", "Positive")) %>%
-  filter(x == "Negative") %>%
+  filter(x == "Positive") %>%
   select(max) %>%
-  as.numeric()
+  as.numeric() + 1
   
   km$centers
   
@@ -38,14 +38,14 @@ holder %>%
 
 km_ss <-
 (holder %>%
-  select(Ch1Amplitude) %>%
+  select(Ch2Amplitude) %>%
   kmeans(., 2) %>%
   .$betweenss
 
 /
 
 holder %>%
-  select(Ch1Amplitude) %>%
+  select(Ch2Amplitude) %>%
   kmeans(., 2) %>%
   .$totss)
   
@@ -61,5 +61,23 @@ gm_predict <-
 predict(gm, holder[2])
 
 
+(
+  holder %>%
+  select(Ch1Amplitude) %>%
+  kmeans(., 2) %>%
+  .$totss
+  
+  /
+
+holder %>%
+  select(Ch1Amplitude) %>%
+  kmeans(., 2) %>%
+  .$betweenss
+  )
+
+gmm$centroids %>%
+  mean()
+
+gmm$covariance_matrices
 
   
