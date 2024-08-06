@@ -3,10 +3,18 @@ library(ClusterR)
 holder <- read_csv(paste0("example_data/", list.files("example_data/")[2]),
                    skip = 3)
 
+holder_plot <-
 holder %>%
   ggplot(aes(x = Ch1Amplitude, 
              y = Ch2Amplitude)) +
   geom_point()
+
+round(ggplot_build(holder_plot)$layout$panel_scales_x[[1]]$range$range[2],-2)
+
+holder %>% 
+  select(Ch1Amplitude) %>% 
+  max() %>%
+  round(-2)
 
 #km <-
 holder %>%
